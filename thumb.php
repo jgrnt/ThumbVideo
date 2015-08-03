@@ -14,6 +14,7 @@ define('THUMB_BROWSER_CACHE',   true);          // Browser cache true or false
 
 $src = isset($_GET['src']) ? $_GET['src'] : false;
 $size = isset($_GET['size']) ? str_replace(array('<', 'x'), '', $_GET['size']) != '' ? $_GET['size'] : 100 : 100;
+$seek = isset($_GET['seek'])? $_GET['seek']:false;
 $path = parse_url($src);
 
 if (isset($path['scheme'])) {
@@ -51,7 +52,7 @@ $file_size = filesize($src);
 $file_time = filemtime($src);
 $file_date = gmdate('D, d M Y H:i:s T', $file_time);
 $file_type = 'jpeg';
-$file_hash = md5($file_salt . ($src.$size) . $file_time);
+$file_hash = md5($file_salt . ($src.$size.$seek) . $file_time);
 $file_temp = THUMB_CACHE . $file_hash . '.img.txt';
 $file_name = basename(substr($src, 0, strrpos($src, '.')) . strtolower(strrchr($src, '.')));
 
@@ -87,8 +88,10 @@ if (!file_exists($file_temp)) {
   $fft = new FFMpegThumbnailer\FFMpegThumbnailer( $src );
   $fft->setOutput( $file_temp )
   ->setOutputSize( intval($size) )
-  ->setImageFormat( $file_type )
-	->run();
+  ->setImageFormat( $file_type );
+  if($seek)
+    $fft->setSeekTime($seek);
+  $fft->run();
 }
 
 header('Content-Type: image/' . $file_type);
